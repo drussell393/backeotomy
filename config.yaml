@@ -1,0 +1,55 @@
+# Configuration YAML File for 
+# Author: Dave Russell (drussell393)
+
+
+### Boolean (true,false) settings -> true => 1, false => 0 ###
+
+# Do you want to display or save logs? (Default:true)
+ENABLE_LOGGING: 1
+
+# Do you want to log to a file? (DEFAULT: Not set)
+# By keeping this commented, you will see logs on STDOUT (if ENABLE_LOGGING is true)
+#LOG_FILE: /change/my/path/backeotomy.log
+
+# Root directory for the site we're backing up, should NOT have a trailing slash ('/')
+ROOT_DIRECTORY: /var/www/public
+
+# Do you want to use rsync to store backups on another system?
+USE_RSYNC: 0
+
+# Rsync credentials. You don't need password if you're using SSH keys
+RSYNC_USER: root
+# Use SSH keys. Do it.
+#RSYNC_PASSWORD: seriouslySSHKeys
+RSYNC_HOST: your.hostname.here
+RSYNC_DIRECTORY: /change/my/directory/path
+
+# Do you want to use GPG? (Encrypts the backups) RECOMMENDED
+USE_GPG: 1
+
+# Keep files locally after rsync and encryption?
+KEEP_FILES: 1
+
+# Do you want to securely scrub all files (only happens if KEEP_FILES is false)
+# This may consume resources on some instances, and you will need "shred" (linux command)
+SECURE_SCRUB: 1
+
+# Directory to save the backups in -- you need this even if you want to use rsync
+SAVE_DIRECTORY: /change/my/directory/path
+
+# Prefix to add to the backup files (eg. a site name)
+# The file will look like this by default: (dbBackup_$date.sql, fileBackup_$date.tar.gz)
+# With a Prefix it will look like: dbBackup_${FILE_PREFIX}_$date.sql, fileBackup_${FILE_PREFIX}_$date.tar.gz)
+FILE_PREFIX: someWebsiteName
+
+# If you want to use GPG, you'll need to set the recipient key holder's e-mail here.
+GPG_RECIPIENT: your@email.com
+
+# If you're using WordPress, this will be true (1).
+IS_WORDPRESS: 1
+
+# You do not need to fill the rest out if you're using WordPress
+DB_USER: someUsername
+DB_PASSWORD: somePassword
+DB_NAME: someDatabase
+DB_HOST: localhost
