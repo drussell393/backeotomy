@@ -23,7 +23,7 @@ if ($defaultSettings->{'IS_WORDPRESS'}) {
 }
 
 # Backup MySQL Database
-my $dbSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/dbBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.sql';
+my $dbSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/dbBackup_' . (exists $defaultSettings->{'FILE_PREFIX'} ? $defaultSettings->{'FILE_PREFIX'} . '_' : '') . $date . '.sql';
 
 if (backup_mysql($defaultSettings->{'DB_USER'}, $defaultSettings->{'DB_PASSWORD'}, $defaultSettings->{'DB_NAME'}, $defaultSettings->{'DB_HOST'}, $dbSaveFile)) {
     log_message("MySQL Database successfully backed up!");
@@ -34,7 +34,7 @@ else
 }
 
 # Backup Files
-my $tarSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/fileBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.tar.gz';
+my $tarSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/fileBackup_' . (exists $defaultSettings->{'FILE_PREFIX'} ? $defaultSettings->{'FILE_PREFIX'} . '_' : '') . $date . '.tar.gz';
 
 if (backup_files($defaultSettings->{'ROOT_DIRECTORY'}, $tarSaveFile)) {
     log_message("Your files have been successfully backed up!");
@@ -158,7 +158,7 @@ sub rsync_files {
 
     foreach $fileName (@fileNames) {
         if (-f $fileName) {
-            system("rsync -avz -p'$defaultSettings->{'RSYNC_PASSWORD'}' $fileName $defaultSettings->{'RSYNC_USER'}@$defaultSettings->{'RSYNC_HOST'}:$defaultSettings->{'RSYNC_DIRECTORY'}")
+            system("rsync -avz " . (exists $defaultSettings->{'RSYNC_PASSWORD'} ? "-p '" . $defaultSettings->{'RSYNC_PASSWORD'} . "'" : '') . " ${fileName} " . $defaultSettings->{'RSYNC_USER'} . "@" . $defaultSettings->{'RSYNC_HOST'} . ":" . $defaultSettings->{'RSYNC_DIRECTORY'});
         }
         else
         {
