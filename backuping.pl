@@ -26,37 +26,37 @@ if ($defaultSettings->{'IS_WORDPRESS'}) {
 my $dbSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/dbBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.sql';
 
 if (backup_mysql($defaultSettings->{'DB_USER'}, $defaultSettings->{'DB_PASSWORD'}, $defaultSettings->{'DB_NAME'}, $defaultSettings->{'DB_HOST'}, $dbSaveFile)) {
-    print "MySQL Database successfully backed up!";
+    log_message("MySQL Database successfully backed up!");
 }
 else
 {
-    print "MySQL Database could not be backed up. Please check MySQL log files, or the config.yaml credentials.";
+    log_message("MySQL Database could not be backed up. Please check MySQL log files, or the config.yaml credentials.");
 }
 
 # Backup Files
 my $tarSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/fileBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.tar.gz';
 
 if (backup_files($defaultSettings->{'ROOT_DIRECTORY'}, $tarSaveFile)) {
-    print "Your files have been successfully backed up!";
+    log_message("Your files have been successfully backed up!");
 }
 else
 {
-    print "Something went wrong! We couldn't back up your files. Check to make sure the directory exists, or check your logs for the output of the tar command.";
+    log_message("Something went wrong! We couldn't back up your files. Check to make sure the directory exists, or check your logs for the output of the tar command.");
 }
 
 
 # Encrypt Files
 if ($defaultSettings->{'USE_GPG'}) {
     if (encrypt_files($dbSaveFile, $tarSaveFile)) {
-        print "We were able to encrypt your files for $defaultSettings->{'RECIPIENT'}.";
+        log_message("We were able to encrypt your files for $defaultSettings->{'RECIPIENT'}.");
         if (!$defaultSettings->{'KEEP_FILES'}) {
-            print "Deleting unencrypted files...";
+            log_message("Deleting unencrypted files...");
             system("rm -fv ${dbSaveFile} ${tarSaveFile}");
         }
     }
     else
     {
-        print "We were unable to encrypt your files for $defaultSettings->{'RECIPIENT'}.";
+        log_message("We were unable to encrypt your files for $defaultSettings->{'RECIPIENT'}.");
     }
 }
 
@@ -122,7 +122,6 @@ sub encrypt_files {
     my $fileName;
 
     foreach $fileName (@fileNames) {
-        print $fileName;
         $gpg->encrypt(plaintext => $fileName, output => $fileName . '.gpg',
                       armor => 1, sign => 0, recipient => $defaultSettings->{'GPG_RECIPIENT'});
         if (!-f $fileName . '.gpg') {
@@ -142,7 +141,7 @@ sub log_message {
         }
         else
         {
-            print $_;
+            print strftime('[%m/%d/%Y] [%H:%M]', localtime); . $_ . "\n";
         }
     }
 }
