@@ -48,15 +48,30 @@ else
 # Encrypt Files
 if ($defaultSettings->{'USE_GPG'}) {
     if (encrypt_files($dbSaveFile, $tarSaveFile)) {
-        log_message("We were able to encrypt your files for $defaultSettings->{'RECIPIENT'}.");
+        log_message("We were able to encrypt your files for $defaultSettings->{'GPG_RECIPIENT'}.");
         if (!$defaultSettings->{'KEEP_FILES'}) {
             log_message("Deleting unencrypted files...");
-            system("rm -fv ${dbSaveFile} ${tarSaveFile}");
+            scrub($dbSaveFile, $tarSaveFile);
         }
     }
     else
     {
         log_message("We were unable to encrypt your files for $defaultSettings->{'RECIPIENT'}.");
+    }
+}
+
+# Rsync Files
+if ($defaultSettings->{'USE_RSYNC'}) {
+    if ($defaultSettings->{'USE_GPG'}) {
+        $dbSaveFile = $dbSaveFile . '.gpg';
+        $tarSaveFile = $tarSaveFile . '.gpg';
+    }
+    if (rsync_files($dbSaveFile, $tarSaveFile)) {
+        log_message("Rsync succeeded for both files.");
+        if (!$defaultSettings->{'KEEP_FILES'}) {
+            log_message("Removing local files...");
+            scrub($dbSaveFile, $tarSaveFile);
+        }
     }
 }
 
@@ -122,26 +137,69 @@ sub encrypt_files {
     my $fileName;
 
     foreach $fileName (@fileNames) {
-        $gpg->encrypt(plaintext => $fileName, output => $fileName . '.gpg',
-                      armor => 1, sign => 0, recipient => $defaultSettings->{'GPG_RECIPIENT'});
-        if (!-f $fileName . '.gpg') {
-            die "Something went wrong!";
+        if (-f $fileName) {
+            $gpg->encrypt(plaintext => $fileName, output => $fileName . '.gpg',
+                          armor => 1, sign => 0, recipient => $defaultSettings->{'GPG_RECIPIENT'});
+            if (!-f $fileName . '.gpg') {
+                return 0;
+            }
+        }
+        else
+        {
+            return 0;
         }
     }
     return 1;
 }
 
+sub rsync_files {
+    my (@fileNames) = @_;
+    my $fileName;
+
+    foreach $fileName (@fileNames) {
+        if (-f $fileName) {
+            system("rsync -avz -p'$defaultSettings->{'RSYNC_PASSWORD'}' $fileName $defaultSettings->{'RSYNC_USER'}@$defaultSettings->{'RSYNC_HOST'}:$defaultSettings->{'RSYNC_DIRECTORY'}")
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+sub scrub {
+    my (@fileNames) = @_;
+    my $fileName;
+
+    foreach $fileName (@fileNames) {
+        if (-f $fileName) {
+            if ($defaultSettings->{'SECURE_SCRUB'}) {
+                log_message("Securely scrubbing: ${fileName}");
+                system("shred -n 250 -z -u ${fileName}");
+            }
+            else
+            {
+                log_message("Removing the file using 'rm'...");
+                system("rm -f ${fileName}");
+            }
+        }
+        return 1;
+    }
+}
+
 sub log_message {
     if ($defaultSettings->{'ENABLE_LOGGING'}) {
+        my $message = $_[0];
         if ($defaultSettings->{'LOG_FILE'}) {
-            open (my $logFile, '>', $defaultSettings->{'LOG_FILE'})
+            open (my $logFile, '>>', $defaultSettings->{'LOG_FILE'})
                 or die "Could not open the log file for writing.";
-            print $_;
+            print $logFile strftime('[%m/%d/%Y] [%H:%M] ', localtime) . $message . "\n";
             close $logFile;
         }
         else
         {
-            print strftime('[%m/%d/%Y] [%H:%M]', localtime); . $_ . "\n";
+            print strftime('[%m/%d/%Y] [%H:%M] ', localtime) . $message . "\n";
         }
     }
 }
