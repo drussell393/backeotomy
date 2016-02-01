@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# Backeotomy
 # Secure backup with encryption and rsync
 # Author: Dave Russell (drussell393)
 # Author URL: https://createazure.com/
@@ -8,33 +9,59 @@ use warnings;
 use POSIX qw(strftime);
 use GnuPG qw(:algo);
 use YAML::XS qw(LoadFile);
+use Data::Dumper;
 
 my $defaultSettings = LoadFile('config.yaml');
-
-print $defaultSettings;
-
-=for comment
-my %config = get_user_credentials();
 my $date = strftime('%m%d%Y', localtime);
 
-if (backup_mysql($config{DB_USER}, $config{DB_PASSWORD}, $config{DB_NAME}, $config{DB_HOST}, '/root/dbBackup_' . $date . '.sql')) {
-    print "We have success, papi. Goodbye. \n"
+if ($defaultSettings->{'IS_WORDPRESS'}) {
+    my $credential;
+    my %credentials = get_wordpress_credentials();
+    for $credential (keys %credentials) {
+        $defaultSettings->{$credential} = $credentials{$credential};
+    }
 }
 
-if (backup_files('/srv/www/public', '/root/wpBackup_' . $date . '.tar.gz')) {
-    print "More successes! \n"
+# Backup MySQL Database
+my $dbSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/dbBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.sql';
+
+if (backup_mysql($defaultSettings->{'DB_USER'}, $defaultSettings->{'DB_PASSWORD'}, $defaultSettings->{'DB_NAME'}, $defaultSettings->{'DB_HOST'}, $dbSaveFile)) {
+    print "MySQL Database successfully backed up!";
+}
+else
+{
+    print "MySQL Database could not be backed up. Please check MySQL log files, or the config.yaml credentials.";
 }
 
-# Enable this section if you want to use GPG encryption
-$config{GPG_RECIPIENT} = 'dave@createazure.com';
-if (encrypt_files('/root/wpBackup_' . $date . '.tar.gz', '/root/dbBackup_' . $date . '.sql')) {
-    print "Yay team! \n"
+# Backup Files
+my $tarSaveFile = $defaultSettings->{'SAVE_DIRECTORY'} . '/fileBackup_' . (exists $defaultSettings->{'PREFIX'} ? $defaultSettings->{PREFIX} . '_' : '') . $date . '.tar.gz';
+
+if (backup_files($defaultSettings->{'ROOT_DIRECTORY'}, $tarSaveFile)) {
+    print "Your files have been successfully backed up!";
+}
+else
+{
+    print "Something went wrong! We couldn't back up your files. Check to make sure the directory exists, or check your logs for the output of the tar command.";
 }
 
-=cut
 
-sub get_user_credentials_wordpress {
-    my $config = 'public/wp-config.php';
+# Encrypt Files
+if ($defaultSettings->{'USE_GPG'}) {
+    if (encrypt_files($dbSaveFile, $tarSaveFile)) {
+        print "We were able to encrypt your files for $defaultSettings->{'RECIPIENT'}.";
+        if (!$defaultSettings->{'KEEP_FILES'}) {
+            print "Deleting unencrypted files...";
+            system("rm -fv ${dbSaveFile} ${tarSaveFile}");
+        }
+    }
+    else
+    {
+        print "We were unable to encrypt your files for $defaultSettings->{'RECIPIENT'}.";
+    }
+}
+
+sub get_wordpress_credentials {
+    my $config = $defaultSettings->{'ROOT_DIRECTORY'} . '/wp-config.php';
     my $configArray;
     my %configArray;
     my $configOption;
@@ -97,10 +124,25 @@ sub encrypt_files {
     foreach $fileName (@fileNames) {
         print $fileName;
         $gpg->encrypt(plaintext => $fileName, output => $fileName . '.gpg',
-                      armor => 1, sign => 0, recipient => $config{GPG_RECIPIENT});
+                      armor => 1, sign => 0, recipient => $defaultSettings->{'GPG_RECIPIENT'});
         if (!-f $fileName . '.gpg') {
             die "Something went wrong!";
         }
     }
     return 1;
+}
+
+sub log_message {
+    if ($defaultSettings->{'ENABLE_LOGGING'}) {
+        if ($defaultSettings->{'LOG_FILE'}) {
+            open (my $logFile, '>', $defaultSettings->{'LOG_FILE'})
+                or die "Could not open the log file for writing.";
+            print $_;
+            close $logFile;
+        }
+        else
+        {
+            print $_;
+        }
+    }
 }
