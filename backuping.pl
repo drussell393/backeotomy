@@ -7,9 +7,7 @@
 use strict;
 use warnings;
 use POSIX qw(strftime);
-use GnuPG qw(:algo);
 use YAML::XS qw(LoadFile);
-use Data::Dumper;
 
 my $defaultSettings = LoadFile('config.yaml');
 my $date = strftime('%m%d%Y', localtime);
@@ -56,7 +54,7 @@ if ($defaultSettings->{'USE_GPG'}) {
     }
     else
     {
-        log_message("We were unable to encrypt your files for $defaultSettings->{'RECIPIENT'}.");
+        log_message("We were unable to encrypt your files for $defaultSettings->{'GPG_RECIPIENT'}.");
     }
 }
 
@@ -133,13 +131,11 @@ sub backup_files {
 
 sub encrypt_files {
     my (@fileNames) = @_;
-    my $gpg = new GnuPG();
     my $fileName;
 
     foreach $fileName (@fileNames) {
         if (-f $fileName) {
-            $gpg->encrypt(plaintext => $fileName, output => $fileName . '.gpg',
-                          armor => 1, sign => 0, recipient => $defaultSettings->{'GPG_RECIPIENT'});
+            system("gpg --recipient $defaultSettings->{'GPG_RECIPIENT'} --output ${fileName}.gpg --encrypt ${fileName} >>$defaultSettings->{'LOG_FILE'} 2>&1");
             if (!-f $fileName . '.gpg') {
                 return 0;
             }
