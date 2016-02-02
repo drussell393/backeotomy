@@ -6,10 +6,10 @@ give the option to encrypt those backups/send them via rsync to another server f
 There's quite a few people that day-to-day have been pretty cool to work with. Among these
 people are:
 
-    - [Jonathan Frederickson](https://github.com/jfrederickson) (who wanted to name this `Backinator`)
-    - [Charles Birk](https://github.com/cjbirk) (who provided the name `Backeotomy`)
-    - [Ricardo Feliciano](https://github.com/felicianotech) (who's a pretty cool guy filled up to the brim with Starbucks)
-    - [Sean Heuer](https://github.com/OompahLoompah) (who's a close friend and an inspirational guy)
+- [Jonathan Frederickson](https://github.com/jfrederickson) (who wanted to name this `Backinator`)
+- [Charles Birk](https://github.com/cjbirk) (who provided the name `Backeotomy`)
+- [Ricardo Feliciano](https://github.com/felicianotech) (who's a pretty cool guy filled up to the brim with Starbucks)
+- [Sean Heuer](https://github.com/OompahLoompah) (who's a close friend and an inspirational guy)
 
 I would like to dedicate this script to the four aforementioned colleagues. They're pretty
 cool.
@@ -35,7 +35,7 @@ as simple as possible to use and setup, so that you could start automating backu
 
 You will need to install the following Perl modules from CPAN:
 
-    - YAML::XS
+- YAML::XS
 
 You can do this by running the following command (in Linux):
 
