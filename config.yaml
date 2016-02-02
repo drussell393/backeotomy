@@ -27,6 +27,9 @@ RSYNC_DIRECTORY: /change/my/directory/path
 # Do you want to use GPG? (Encrypts the backups) RECOMMENDED
 USE_GPG: 1
 
+# If you want to use GPG, you'll need to set the recipient key holder's e-mail here.
+GPG_RECIPIENT: your@email.com
+
 # Keep files locally after rsync and encryption?
 KEEP_FILES: 1
 
@@ -41,9 +44,6 @@ SAVE_DIRECTORY: /change/my/directory/path
 # The file will look like this by default: (dbBackup_$date.sql, fileBackup_$date.tar.gz)
 # With a Prefix it will look like: dbBackup_${FILE_PREFIX}_$date.sql, fileBackup_${FILE_PREFIX}_$date.tar.gz)
 FILE_PREFIX: someWebsiteName
-
-# If you want to use GPG, you'll need to set the recipient key holder's e-mail here.
-GPG_RECIPIENT: your@email.com
 
 # If you're using WordPress, this will be true (1).
 IS_WORDPRESS: 1
