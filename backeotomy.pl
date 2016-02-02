@@ -8,8 +8,9 @@ use strict;
 use warnings;
 use POSIX qw(strftime);
 use YAML::XS qw(LoadFile);
+use File::Basename;
 
-my $defaultSettings = LoadFile('config.yaml');
+my $defaultSettings = LoadFile(dirname(__FILE__) . '/config.yaml');
 my $date = strftime('%m%d%Y', localtime);
 
 if ($defaultSettings->{'IS_WORDPRESS'}) {
