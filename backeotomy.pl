@@ -136,7 +136,14 @@ sub encrypt_files {
 
     foreach $fileName (@fileNames) {
         if (-f $fileName) {
-            system("gpg --recipient $defaultSettings->{'GPG_RECIPIENT'} --output ${fileName}.gpg --encrypt ${fileName} >>$defaultSettings->{'LOG_FILE'} 2>&1");
+            if ($defaultSettings->{'ENABLE_LOGGING'}) {
+                system("gpg --recipient $defaultSettings->{'GPG_RECIPIENT'} --output ${fileName}.gpg --encrypt ${fileName} " . (exists $defaultSettings->{'LOG_FILE'} ? ">>$defaultSettings->{'LOG_FILE'} 2>&1" : ''));
+            }
+            else
+            {
+                system("gpg --recipient $defaultSettings->{'GPG_RECIPIENT'} --output ${fileName}.gpg --encrypt ${fileName} >>/dev/null 2>&1");
+            }
+
             if (!-f $fileName . '.gpg') {
                 return 0;
             }
